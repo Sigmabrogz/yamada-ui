@@ -24,6 +24,10 @@ const TestComponent: FC<TestComponentProps> = (props) => {
 }
 
 describe("<Carousel />", () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   test("sets `displayName` correctly", () => {
     expect(Carousel.Root.displayName).toBe("CarouselRoot")
     expect(Carousel.List.displayName).toBe("CarouselList")
@@ -91,88 +95,118 @@ describe("<Carousel />", () => {
 
   test("should render correctly slide when using control button", async () => {
     const { user } = await render(<TestComponent />)
+    vi.useFakeTimers()
 
-    await user.click(page.getByRole("button", { name: "Go to next slide" }))
-    vi.waitFor(async () => {
-      await expect
-        .element(page.getByText("Slide 2"))
-        .toHaveAttribute("data-selected")
+    const goNextSlideButton = page.getByRole("button", {
+      name: "Go to next slide",
     })
+    await user.click(goNextSlideButton)
+    vi.advanceTimersByTime(25)
 
-    await user.click(
-      page.getByRole("button", {
-        name: "Go to previous slide",
-      }),
-    )
-    vi.waitFor(async () => {
-      await expect
-        .element(page.getByText("Slide 1"))
-        .toHaveAttribute("data-selected")
+    const secondSlide = page.getByText("Slide 2")
+    await expect.element(secondSlide).toHaveAttribute("data-selected")
+
+    const goPreviousSlideButton = page.getByRole("button", {
+      name: "Go to previous slide",
     })
+    await user.click(goPreviousSlideButton)
+    vi.advanceTimersByTime(25)
+
+    const firstSlide = page.getByText("Slide 1")
+    await expect.element(firstSlide).toHaveAttribute("data-selected")
   })
 
   test("should switch to correctly slide when click on indicator", async () => {
     const { user } = await render(<TestComponent />)
+    vi.useFakeTimers()
 
-    await user.click(page.getByRole("tab", { name: "Go to 2 slide" }))
-    await expect
-      .element(page.getByText("Slide 2"))
-      .toHaveAttribute("data-selected")
+    const tab = page.getByRole("tab", { name: "Go to 2 slide" })
+    await user.click(tab)
+    vi.advanceTimersByTime(25)
+
+    const secondSlide = page.getByText("Slide 2")
+    await expect.element(secondSlide).toHaveAttribute("data-selected")
   })
 
   test("should disabled next and prev button when looping is disabled", async () => {
     const { user } = await render(<TestComponent loop={false} />)
+    vi.useFakeTimers()
 
-    await expect
-      .element(page.getByRole("button", { name: "Go to previous slide" }))
-      .toBeDisabled()
+    const goPreviousSlideButton = page.getByRole("button", {
+      name: "Go to previous slide",
+    })
+    await expect.element(goPreviousSlideButton).toBeDisabled()
 
-    await user.click(page.getByRole("tab", { name: "Go to 5 slide" }))
-    await expect
-      .element(page.getByRole("button", { name: "Go to next slide" }))
-      .toBeDisabled()
+    const goLastSlideTab = page.getByRole("tab", { name: "Go to 5 slide" })
+    await user.click(goLastSlideTab)
+
+    vi.advanceTimersByTime(25)
+
+    const goNextSlideButton = page.getByRole("button", {
+      name: "Go to next slide",
+    })
+    await expect.element(goNextSlideButton).toBeDisabled()
   })
 
   test("should move the carousel correctly when left or right arrow keys are pressed", async () => {
     const { user } = await render(<TestComponent orientation="horizontal" />)
+    vi.useFakeTimers()
 
     await user.click(page.getByRole("tab", { name: "Go to 1 slide" }))
+    vi.advanceTimersByTime(25)
+
     await user.keyboard("{ArrowDown}")
+    vi.advanceTimersByTime(25)
+
     await expect
       .element(page.getByText("Slide 1"))
       .toHaveAttribute("data-selected")
 
     await user.keyboard("{ArrowUp}")
+    vi.advanceTimersByTime(25)
+
     await expect
       .element(page.getByText("Slide 1"))
       .toHaveAttribute("data-selected")
 
     await user.keyboard("{ArrowRight}")
+    vi.advanceTimersByTime(25)
+
     await expect
       .element(page.getByText("Slide 2"))
       .toHaveAttribute("data-selected")
 
     await user.keyboard("{ArrowLeft}")
+    vi.advanceTimersByTime(25)
+
     await expect
       .element(page.getByText("Slide 1"))
       .toHaveAttribute("data-selected")
 
     await user.keyboard("{ArrowLeft}")
+    vi.advanceTimersByTime(25)
+
     await expect
       .element(page.getByText("Slide 5"))
       .toHaveAttribute("data-selected")
 
     await user.keyboard("{ArrowRight}")
+    vi.advanceTimersByTime(25)
+
     await expect
       .element(page.getByText("Slide 1"))
       .toHaveAttribute("data-selected")
 
     await user.keyboard("{End}")
+    vi.advanceTimersByTime(25)
+
     await expect
       .element(page.getByText("Slide 5"))
       .toHaveAttribute("data-selected")
 
     await user.keyboard("{Home}")
+    vi.advanceTimersByTime(25)
+
     await expect
       .element(page.getByText("Slide 1"))
       .toHaveAttribute("data-selected")
@@ -180,45 +214,63 @@ describe("<Carousel />", () => {
 
   test("should move the carousel correctly when up or down arrow keys are pressed", async () => {
     const { user } = await render(<TestComponent orientation="vertical" />)
+    vi.useFakeTimers()
 
     await user.click(page.getByRole("tab", { name: "Go to 1 slide" }))
+    vi.advanceTimersByTime(25)
 
     await user.keyboard("{ArrowLeft}")
+    vi.advanceTimersByTime(25)
+
     await expect
       .element(page.getByText("Slide 1"))
       .toHaveAttribute("data-selected")
 
     await user.keyboard("{ArrowRight}")
+    vi.advanceTimersByTime(25)
+
     await expect
       .element(page.getByText("Slide 1"))
       .toHaveAttribute("data-selected")
 
     await user.keyboard("{ArrowDown}")
+    vi.advanceTimersByTime(25)
+
     await expect
       .element(page.getByText("Slide 2"))
       .toHaveAttribute("data-selected")
 
     await user.keyboard("{ArrowUp}")
+    vi.advanceTimersByTime(25)
+
     await expect
       .element(page.getByText("Slide 1"))
       .toHaveAttribute("data-selected")
 
     await user.keyboard("{ArrowUp}")
+    vi.advanceTimersByTime(25)
+
     await expect
       .element(page.getByText("Slide 5"))
       .toHaveAttribute("data-selected")
 
     await user.keyboard("{ArrowDown}")
+    vi.advanceTimersByTime(25)
+
     await expect
       .element(page.getByText("Slide 1"))
       .toHaveAttribute("data-selected")
 
     await user.keyboard("{End}")
+    vi.advanceTimersByTime(25)
+
     await expect
       .element(page.getByText("Slide 5"))
       .toHaveAttribute("data-selected")
 
     await user.keyboard("{Home}")
+    vi.advanceTimersByTime(25)
+
     await expect
       .element(page.getByText("Slide 1"))
       .toHaveAttribute("data-selected")
@@ -236,14 +288,13 @@ describe("<Carousel />", () => {
         </Carousel.List>
 
         <Carousel.Indicators>
-          <button data-testid="custom-indicator">Custom</button>
+          <button>Custom</button>
         </Carousel.Indicators>
       </Carousel.Root>,
     )
 
-    await expect
-      .element(page.getByTestId("custom-indicator"))
-      .toBeInTheDocument()
+    const customIndicator = page.getByRole("button", { name: "Custom" })
+    await expect.element(customIndicator).toBeVisible()
   })
 
   test("renders CarouselIndicators with render prop returning a valid element", async () => {
@@ -267,15 +318,9 @@ describe("<Carousel />", () => {
       </Carousel.Root>,
     )
 
-    await expect
-      .element(page.getByTestId("render-indicator-0"))
-      .toBeInTheDocument()
-    await expect
-      .element(page.getByTestId("render-indicator-1"))
-      .toBeInTheDocument()
-    await expect
-      .element(page.getByTestId("render-indicator-2"))
-      .toBeInTheDocument()
+    await expect.element(page.getByTestId("render-indicator-0")).toBeVisible()
+    await expect.element(page.getByTestId("render-indicator-1")).toBeVisible()
+    await expect.element(page.getByTestId("render-indicator-2")).toBeVisible()
   })
 
   test("renders CarouselIndicators with render prop returning a non-element", async () => {
@@ -293,7 +338,7 @@ describe("<Carousel />", () => {
       </Carousel.Root>,
     )
 
-    await expect.element(page.getByText("dot-0")).toBeInTheDocument()
-    await expect.element(page.getByText("dot-1")).toBeInTheDocument()
+    await expect.element(page.getByText("dot-0")).toBeVisible()
+    await expect.element(page.getByText("dot-1")).toBeVisible()
   })
 })
